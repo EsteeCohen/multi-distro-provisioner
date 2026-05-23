@@ -1,26 +1,56 @@
-# nginx-monitor.service — watches nginx and restarts it if it goes down.
-# Implemented in: feat/phase-7-systemd (Issue #8)
+# nginx-monitor.service — continuously watches nginx and restarts it if it goes down.
 #
-# WHY a custom monitor service?
-#   systemd already restarts nginx on crash via Restart=on-failure in nginx's
-#   own unit. This service adds a layer that actively polls the /health endpoint
-#   and restarts nginx if it stops responding — even if the process is alive.
+# Closes #8
 #
-# To install:
-#   cp nginx-monitor.service /etc/systemd/system/
-#   systemctl daemon-reload
-#   systemctl enable --now nginx-monitor
+# HOW a systemd unit file is structured:
+#   Every unit file has sections marked with [SectionName].
+#   There are three sections we always use:
+#     [Unit]    → what this service IS and what it depends on
+#     [Service] → HOW to run it (the actual command, restart behavior, user)
+#     [Install] → WHEN to start it (which boot target enables it)
 
 [Unit]
-Description=nginx health monitor
-After=nginx.service
-Requires=nginx.service
+Description=nginx health monitor — restarts nginx if it stops responding
+# After= means: don't start this service until nginx.service has started.
+# It does NOT mean this service requires nginx — if nginx stops, this keeps running.
+After=nginx.service network.target
+
+# Wants= is a soft dependency: try to start nginx alongside this service,
+# but don't fail if nginx isn't available.
+# (Use Requires= for hard dependencies that must succeed)
+Wants=nginx.service
 
 [Service]
+# Type=simple → systemd considers the service started as soon as ExecStart runs.
+# Other types: forking (process forks to background), oneshot (runs once and exits),
+#              notify (process signals systemd when ready)
 Type=simple
-ExecStart=/usr/local/bin/nginx-monitor.sh
+
+# The script this service runs. Must be an absolute path.
+# We'll install this script in setup_systemd.sh
+ExecStart=/usr/local/bin/nginx-monitor-loop.sh
+
+# Restart=always → if the process exits for ANY reason, restart it.
+# Other options: on-failure (only on non-zero exit), on-abnormal, no
 Restart=always
-RestartSec=30
+
+# How long to wait before restarting after a failure
+RestartSec=10
+
+# Run as root because we need systemctl restart nginx (requires root)
+User=root
+
+# Where to send stdout and stderr output.
+# journal → goes into journald, readable with: journalctl -u nginx-monitor
+StandardOutput=journal
+StandardError=journal
+
+# SyslogIdentifier sets the tag used in journal entries
+# Makes logs easier to find: journalctl -t nginx-monitor
+SyslogIdentifier=nginx-monitor
 
 [Install]
+# WantedBy=multi-user.target means: enable this service when the system
+# reaches normal multi-user mode (i.e., after boot, when everything is up).
+# This is the standard target for services that should always be running.
 WantedBy=multi-user.target

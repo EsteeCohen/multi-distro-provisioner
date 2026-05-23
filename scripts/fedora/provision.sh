@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# provision.sh — Fedora entry point. Called by Vagrant on first boot.
+# provision.sh ג€” Fedora entry point. Called by Vagrant on first boot.
 
 set -euo pipefail
 
@@ -13,5 +13,6 @@ bash "${SCRIPT_DIR}/../common/create_users.sh"
 bash "${SCRIPT_DIR}/../common/install_nginx.sh"
 bash "${SCRIPT_DIR}/setup_firewall.sh"
 bash "${SCRIPT_DIR}/../common/setup_docker.sh"
+bash "${SCRIPT_DIR}/../common/setup_systemd.sh"
 
 log_info "Provisioning complete."

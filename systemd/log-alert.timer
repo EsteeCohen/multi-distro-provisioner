@@ -1,0 +1,37 @@
+# log-alert.timer — triggers log-alert.service on a schedule.
+#
+# This file pairs with log-alert.service (matched by filename).
+# Enable the TIMER, not the service: systemctl enable log-alert.timer
+#
+# WHY a separate .timer file?
+#   In cron you write: 0 * * * * /path/to/script
+#   In systemd you split it: the .service defines what runs,
+#   the .timer defines when. Separation of concerns.
+#
+# Benefit: you can run the service manually at any time with:
+#   systemctl start log-alert.service
+#   without touching the schedule.
+
+[Unit]
+Description=Run log monitor every hour
+Requires=log-alert.service
+
+[Timer]
+# OnBootSec=5min → run once, 5 minutes after boot
+# WHY? So we get an initial log check shortly after provisioning.
+OnBootSec=5min
+
+# OnUnitActiveSec=1h → then run every 1 hour after the last run
+OnUnitActiveSec=1h
+
+# AccuracySec=1min → allow up to 1 minute of jitter.
+# WHY jitter? If 100 servers all fire at exactly the same second,
+# they hammer the same resources. Jitter spreads the load.
+AccuracySec=1min
+
+# Persist=true → if the system was off when the timer should have fired,
+# run it immediately on next boot instead of waiting for the next interval.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

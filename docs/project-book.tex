@@ -1,0 +1,972 @@
+%% ============================================================
+%% project-book.tex
+%% Compile with XeLaTeX in Overleaf:
+%%   Menu -> Compiler -> XeLaTeX
+%% ============================================================
+
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{polyglossia}
+\setmainlanguage{hebrew}
+\setotherlanguage{english}
+
+\usepackage{fontspec}
+\newfontfamily\hebrewfont{FreeSans}
+\newfontfamily\hebrewfonttt{FreeSans}
+\setmainfont{FreeSans}
+
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{mdframed}
+\usepackage{enumitem}
+\usepackage{graphicx}
+
+%% ── Colors ───────────────────────────────────────────────────
+\definecolor{codebackground}{RGB}{245,245,245}
+\definecolor{codekeyword}{RGB}{0,0,200}
+\definecolor{codestring}{RGB}{163,21,21}
+\definecolor{codecomment}{RGB}{0,128,0}
+\definecolor{ubuntuorange}{RGB}{233,84,32}
+\definecolor{fedorablue}{RGB}{60,110,180}
+\definecolor{sectionblue}{RGB}{30,100,170}
+
+%% ── Code listings ────────────────────────────────────────────
+\lstset{
+  backgroundcolor=\color{codebackground},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekeyword}\bfseries,
+  stringstyle=\color{codestring},
+  commentstyle=\color{codecomment}\itshape,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{gray!40},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=8pt,
+  showstringspaces=false,
+  tabsize=4,
+}
+
+\lstdefinelanguage{bash}{
+  keywords={if,then,else,fi,for,do,done,while,case,in,esac,function,return,
+             set,source,export,local,echo,read,mapfile},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+%% ── Page style ───────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small\rightmark}
+\fancyhead[L]{\small multi-distro-provisioner}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ── Section formatting ───────────────────────────────────────
+\titleformat{\section}
+  {\Large\bfseries\color{sectionblue}}
+  {\thesection}{1em}{}[\titlerule]
+
+\titleformat{\subsection}
+  {\large\bfseries}
+  {\thesubsection}{1em}{}
+
+%% ── Info box ─────────────────────────────────────────────────
+\newmdenv[
+  backgroundcolor=blue!5,
+  linecolor=blue!40,
+  linewidth=1.5pt,
+  leftmargin=0pt,
+  rightmargin=0pt,
+  innerleftmargin=10pt,
+  innerrightmargin=10pt,
+  innertopmargin=8pt,
+  innerbottommargin=8pt,
+]{infobox}
+
+%% ── TikZ styles ──────────────────────────────────────────────
+\tikzstyle{block} = [rectangle, rounded corners, minimum width=3.5cm,
+  minimum height=1cm, text centered, draw=black, fill=blue!10,
+  font=\small]
+\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=0.8cm,
+  text centered, draw=black, fill=orange!20, font=\small, aspect=2]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+\tikzstyle{startend} = [rectangle, rounded corners=8pt, minimum width=3cm,
+  minimum height=0.9cm, text centered, draw=black, fill=green!20, font=\small]
+
+%% ============================================================
+\begin{document}
+%% ============================================================
+
+%% ── Title Page ───────────────────────────────────────────────
+\begin{titlepage}
+\centering
+\vspace*{2cm}
+
+{\Huge\bfseries\color{sectionblue} Multi-Distro Provisioner}\\[0.5cm]
+{\Large מדריך מקיף לפרויקט אוטומציית תשתית לינוקס}\\[2cm]
+
+{\large
+\begin{tabular}{rl}
+\textbf{מחברת:} & אסתי כהן \\[0.3cm]
+\textbf{טכנולוגיות:} & Bash, Vagrant, systemd, nginx, Docker \\[0.3cm]
+\textbf{הפצות:} & Ubuntu 22.04 \& Fedora 39 \\[0.3cm]
+\end{tabular}
+}
+
+\vspace{2cm}
+
+\begin{infobox}
+\centering
+\textit{"הדרך הטובה ביותר ללמוד לינוקס היא לבנות משהו שצריך לרוץ עליו."}
+\end{infobox}
+
+\vfill
+{\small \today}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+%% ============================================================
+\section{הקדמה — למה בניתי את הפרויקט הזה}
+%% ============================================================
+
+במהלך לימודיי עבדתי אך ורק עם Ubuntu. זו הייתה ההפצה שהכרתי, זו שנלמדה בקורסים, זו שבה הרגשתי בנוח. אבל ככל שלמדתי יותר, הבנתי שבעולם האמיתי — במיוחד בסביבות ארגוניות — Ubuntu היא רק אחת מתוך אפשרויות רבות. RedHat, Fedora, CentOS ו-RHEL שולטות בשרתים ובענן הארגוני.
+
+לכן שאלתי את עצמי: מה הדרך הטובה ביותר ללמוד בפועל כיצד הפצות לינוקס שונות עובדות? קריאה לא הספיקה. היה צריך \textit{לבנות} משהו שרץ על שתיהן — משהו שמכריח להבין את ההבדלים, לא רק לקרוא עליהם.
+
+זה בדיוק מה שהפרויקט הזה עושה: מספק (provision) מכונת לינוקס חדשה והופך אותה לסביבה מאובטחת, מוגדרת ומוכנה לייצור — אוטומטית — גם על Ubuntu וגם על Fedora.
+
+\subsection*{מה תלמד מהספר הזה?}
+
+\begin{itemize}[noitemsep]
+  \item מה זה לינוקס, מה זו הפצה, ומה ההבדל בין Ubuntu ל-Fedora
+  \item כיצד כותבים סקריפטי Bash מקצועיים עם טיפול בשגיאות
+  \item כיצד עובדים עם systemd — מנהל השירותים של לינוקס המודרני
+  \item כיצד מנהלים משתמשים, הרשאות וחומות אש
+  \item כיצד מתקינים ומגדירים nginx ו-Docker
+  \item כיצד עובדים עם Git, GitHub Actions ו-Pull Requests
+\end{itemize}
+
+\begin{infobox}
+\textbf{הערה:} הספר מיועד למי שמעולם לא עבד עם לינוקס, אבל גם מי שמכיר Ubuntu ימצא ערך רב בחלקים העוסקים בהשוואה בין ההפצות.
+\end{infobox}
+
+\newpage
+%% ============================================================
+\section{יסודות — מה זה לינוקס ומה ההבדל בין הפצות?}
+%% ============================================================
+
+\subsection{הגרעין (Kernel) וההפצה (Distribution)}
+
+לינוקס עצמו הוא \textbf{גרעין} (Kernel) — תוכנה בסיסית שמנהלת את החומרה: מעבד, זיכרון, רשת, דיסק. אבל גרעין לבד הוא לא מספיק. צריך כלים, חבילות תוכנה, ממשק משתמש. שילוב של כל אלה יחד נקרא \textbf{הפצה} (Distribution).
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.8cm]
+  \node[block, fill=gray!20, minimum width=8cm] (kernel) {Linux Kernel};
+  \node[block, fill=blue!15, minimum width=3.5cm, above left=of kernel] (ubuntu) {Ubuntu};
+  \node[block, fill=red!15, minimum width=3.5cm, above right=of kernel] (fedora) {Fedora};
+  \node[block, fill=purple!15, minimum width=3.5cm, above=1.6cm of kernel] (debian) {Debian / RHEL / Arch...};
+  \draw[arrow] (ubuntu) -- (kernel);
+  \draw[arrow] (fedora) -- (kernel);
+  \draw[arrow] (debian) -- (kernel);
+\end{tikzpicture}
+\end{center}
+
+\subsection{ההבדלים בין Ubuntu ו-Fedora}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{נושא} & \textbf{Ubuntu} & \textbf{Fedora} \\
+\midrule
+בסיס & Debian & Red Hat \\
+מנהל חבילות & \texttt{apt} & \texttt{dnf} \\
+התקנת חבילה & \texttt{apt install nginx} & \texttt{dnf install nginx} \\
+עדכון מערכת & \texttt{apt update \&\& apt upgrade} & \texttt{dnf update} \\
+חומת אש & \texttt{ufw} & \texttt{firewalld} \\
+פתיחת פורט & \texttt{ufw allow 80/tcp} & \texttt{firewall-cmd -{}-add-port=80/tcp} \\
+מנהל שירותים & \texttt{systemctl} & \texttt{systemctl} (זהה!) \\
+צביעת לוגים & \texttt{journalctl} & \texttt{journalctl} (זהה!) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{infobox}
+\textbf{חשוב לזכור:} systemd ו-journalctl הם זהים בשתי ההפצות. ההבדלים הגדולים הם במנהל החבילות ובכלי חומת האש.
+\end{infobox}
+
+\subsection{מה זה Terminal ומה זה Shell?}
+
+ה-\textbf{Terminal} הוא החלון שבו מקלידים פקודות. ה-\textbf{Shell} הוא התוכנה שמפרשת את הפקודות. ב-Linux, ה-Shell הנפוץ ביותר הוא \textbf{Bash}.
+
+\begin{lstlisting}[language=bash, caption={דוגמה לפקודות בסיסיות ב-Bash}]
+# ls — מציג את תוכן התיקייה הנוכחית
+ls -la
+
+# cd — מעבר לתיקייה
+cd /etc/nginx
+
+# cat — מציג את תוכן קובץ
+cat /etc/os-release
+
+# sudo — מריץ פקודה כ-root (מנהל מערכת)
+sudo apt install nginx
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{כלים בסיסיים — Bash ו-systemd}
+%% ============================================================
+
+\subsection{קובץ .sh — מה זה?}
+
+קובץ \texttt{.sh} הוא \textbf{סקריפט Bash} — קובץ טקסט פשוט שמכיל פקודות לינוקס, מבוצעות שורה אחר שורה. ההבדל היחיד בין הרצת פקודות בטרמינל לבין סקריפט הוא שבסקריפט הכל קורה אוטומטית.
+
+\begin{lstlisting}[language=bash, caption={מבנה סקריפט בסיסי}]
+#!/usr/bin/env bash
+# השורה הראשונה נקראת "shebang" — מספרת ל-Linux איזה תוכנה תפרש את הקובץ
+
+set -euo pipefail
+# שלושה דגלי בטיחות:
+# -e  : עצור מיד אם פקודה נכשלת
+# -u  : שגיאה אם משתמשים במשתנה שלא הוגדר
+# -o pipefail : אם פקודה ב-pipe נכשלת, כל ה-pipe נכשל
+
+echo "Hello from bash!"
+\end{lstlisting}
+
+\subsection{משתנים ופונקציות}
+
+\begin{lstlisting}[language=bash, caption={משתנים, פונקציות ו-if ב-Bash}]
+# הגדרת משתנה — ללא רווחים סביב =
+NAME="devops"
+
+# שימוש במשתנה — עם $
+echo "Hello, ${NAME}"
+
+# פונקציה
+log_info() {
+    echo "[INFO] $*"
+    # $* = כל הארגומנטים שהועברו לפונקציה
+}
+
+# if statement
+if [[ "${EUID}" -ne 0 ]]; then
+    log_info "חייבים להריץ כ-root"
+    exit 1
+fi
+# EUID = מזהה המשתמש הנוכחי. root = 0
+# -ne = "not equal" (השוואה מספרית)
+\end{lstlisting}
+
+\subsection{systemd — מנהל השירותים}
+
+\textbf{systemd} הוא התוכנה שמנהלת את כל השירותים (processes) שרצים ברקע ב-Linux המודרני. כשהמחשב מתחיל, systemd הוא הדבר הראשון שרץ.
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.2cm]
+  \node[startend] (boot) {מחשב מופעל};
+  \node[block, below=of boot] (kernel2) {Linux Kernel};
+  \node[block, below=of kernel2] (systemd) {systemd (PID 1)};
+  \node[block, below left=of systemd, xshift=-1cm] (nginx2) {nginx.service};
+  \node[block, below=of systemd] (docker2) {docker.service};
+  \node[block, below right=of systemd, xshift=1cm] (monitor) {nginx-monitor.service};
+
+  \draw[arrow] (boot) -- (kernel2);
+  \draw[arrow] (kernel2) -- (systemd);
+  \draw[arrow] (systemd) -- (nginx2);
+  \draw[arrow] (systemd) -- (docker2);
+  \draw[arrow] (systemd) -- (monitor);
+\end{tikzpicture}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{פקודה} & \textbf{מה היא עושה} \\
+\midrule
+\texttt{systemctl start nginx} & מפעיל nginx עכשיו \\
+\texttt{systemctl stop nginx} & עוצר nginx \\
+\texttt{systemctl enable nginx} & מפעיל nginx בכל אתחול \\
+\texttt{systemctl status nginx} & מציג את מצב nginx \\
+\texttt{journalctl -u nginx} & מציג לוגים של nginx \\
+\texttt{journalctl -u nginx -f} & מציג לוגים בזמן אמת \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\newpage
+%% ============================================================
+\section{מבנה הפרויקט}
+%% ============================================================
+
+\subsection{סקירה כללית}
+
+\begin{lstlisting}[caption={מבנה תיקיות הפרויקט}]
+multi-distro-provisioner/
+|
+|-- Vagrantfile          <- מגדיר את המכונות הוירטואליות
+|-- Makefile             <- קיצורי דרך לפקודות
+|-- CHECKLIST.md         <- מעקב אחר התקדמות
+|
+|-- docs/                <- תיעוד
+|-- config/
+|   |-- users.conf       <- רשימת המשתמשים ליצירה
+|   +-- nginx/
+|       +-- default.conf <- הגדרות שרת nginx
+|
+|-- scripts/
+|   |-- common/          <- סקריפטים שרצים על שתי ההפצות
+|   |-- ubuntu/          <- ספציפי ל-Ubuntu
+|   +-- fedora/          <- ספציפי ל-Fedora
+|
++-- systemd/             <- קבצי unit של systemd
+\end{lstlisting}
+
+\subsection{זרימת הפרויקט הכללית}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.9cm, every node/.style={font=\small}]
+  \node[startend] (start) {\texttt{make up}};
+  \node[block, below=of start] (vagrant) {Vagrant מפעיל VMs};
+  \node[block, below=of vagrant] (provision) {Vagrant מריץ provision.sh};
+  \node[block, below=of provision] (users) {שלב 1: יצירת משתמשים};
+  \node[block, below=of users] (nginx3) {שלב 2: התקנת nginx};
+  \node[block, below=of nginx3] (fw) {שלב 3: הגדרת חומת אש};
+  \node[block, below=of fw] (docker3) {שלב 4: התקנת Docker};
+  \node[block, below=of docker3] (sysd) {שלב 7: שירותי systemd};
+  \node[startend, below=of sysd] (done) {מוכן!};
+
+  \draw[arrow] (start) -- (vagrant);
+  \draw[arrow] (vagrant) -- (provision);
+  \draw[arrow] (provision) -- (users);
+  \draw[arrow] (users) -- (nginx3);
+  \draw[arrow] (nginx3) -- (fw);
+  \draw[arrow] (fw) -- (docker3);
+  \draw[arrow] (docker3) -- (sysd);
+  \draw[arrow] (sysd) -- (done);
+\end{tikzpicture}
+\end{center}
+
+\subsection{Vagrant — מה זה?}
+
+\textbf{Vagrant} הוא כלי שמאפשר לתאר מכונה וירטואלית בקובץ טקסט (\texttt{Vagrantfile}) ולהפעיל אותה עם פקודה אחת. הרעיון הוא \textbf{Infrastructure as Code} — תשתית המתוארת בקוד.
+
+\begin{lstlisting}[caption={קטע מה-Vagrantfile}]
+Vagrant.configure("2") do |config|
+
+  config.vm.define "ubuntu-node" do |ubuntu|
+    ubuntu.vm.box     = "ubuntu/jammy64"  # Ubuntu 22.04
+    ubuntu.vm.network "private_network", ip: "192.168.56.10"
+    ubuntu.vm.network "forwarded_port", guest: 80, host: 8080
+    ubuntu.vm.provision "shell",
+      inline: "bash /vagrant/scripts/ubuntu/provision.sh"
+  end
+
+end
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 1 — ניהול משתמשים}
+%% ============================================================
+
+\subsection{מודל המשתמשים}
+
+\begin{center}
+\begin{tikzpicture}
+  \node[block, fill=ubuntuorange!20, minimum width=4cm] (devops2) {devops};
+  \node[block, fill=fedorablue!20, minimum width=4cm, right=2cm of devops2] (appuser2) {appuser};
+
+  \node[below=0.4cm of devops2, font=\small, text=gray] (d1) {sudo: כן};
+  \node[below=0.8cm of devops2, font=\small, text=gray] (d2) {docker group: כן};
+  \node[below=1.2cm of devops2, font=\small, text=gray] (d3) {/home/devops};
+
+  \node[below=0.4cm of appuser2, font=\small, text=gray] (a1) {sudo: לא};
+  \node[below=0.8cm of appuser2, font=\small, text=gray] (a2) {docker group: כן};
+  \node[below=1.2cm of appuser2, font=\small, text=gray] (a3) {בעלים של /app};
+\end{tikzpicture}
+\end{center}
+
+\subsection{זרימת יצירת משתמש}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.8cm]
+  \node[startend] (s) {קרא שורה מ-users.conf};
+  \node[decision, below=of s] (grp) {קבוצה קיימת?};
+  \node[block, right=2cm of grp] (mkgrp) {\texttt{groupadd}};
+  \node[decision, below=1.2cm of grp] (usr) {משתמש קיים?};
+  \node[block, right=2cm of usr] (mkusr) {\texttt{useradd}};
+  \node[decision, below=1.2cm of usr] (sud) {sudo=yes?};
+  \node[block, right=2cm of sud] (mksud) {כתוב ל-sudoers.d};
+  \node[startend, below=1.2cm of sud] (next) {משתמש הבא};
+
+  \draw[arrow] (s) -- (grp);
+  \draw[arrow] (grp) -- node[above,font=\tiny]{לא} (mkgrp);
+  \draw[arrow] (grp) -- node[left,font=\tiny]{כן} (usr);
+  \draw[arrow] (mkgrp) |- (usr);
+  \draw[arrow] (usr) -- node[above,font=\tiny]{לא} (mkusr);
+  \draw[arrow] (usr) -- node[left,font=\tiny]{כן} (sud);
+  \draw[arrow] (mkusr) |- (sud);
+  \draw[arrow] (sud) -- node[above,font=\tiny]{כן} (mksud);
+  \draw[arrow] (sud) -- node[left,font=\tiny]{לא} (next);
+  \draw[arrow] (mksud) |- (next);
+\end{tikzpicture}
+\end{center}
+
+\subsection{הסבר הקוד}
+
+\begin{lstlisting}[language=bash, caption={create\_users.sh — חלק מרכזי}]
+# mapfile קורא את כל הקובץ למערך לפני הלולאה
+# זה מונע בעיות stdin כשפקודות כמו useradd רצות בתוך הלולאה
+mapfile -t lines < "${CONFIG_FILE}"
+
+for line in "${lines[@]}"; do
+    # דלג על שורות ריקות ושורות הערה
+    [[ -z "${line}" || "${line}" =~ ^# ]] && continue
+
+    # פרסר את השורה לפי ":"
+    # <<< מזין את המחרוזת ישירות ל-read
+    IFS=: read -r username group shell sudo_access <<< "${line}"
+
+    # צור קבוצה אם לא קיימת
+    if ! getent group "${group}" &>/dev/null; then
+        groupadd "${group}"
+    fi
+
+    # צור משתמש אם לא קיים
+    if ! id "${username}" &>/dev/null; then
+        useradd --create-home --gid "${group}" \
+                --shell "${shell}" "${username}"
+    fi
+
+    # הגדר sudo אם נדרש
+    if [[ "${sudo_access}" == "yes" ]]; then
+        echo "${username} ALL=(ALL) NOPASSWD:ALL" \
+             > "/etc/sudoers.d/${username}"
+        chmod 440 "/etc/sudoers.d/${username}"
+        # chmod 440 חובה — sudo מסרב לקרוא קבצים עם הרשאות שגויות
+    fi
+done
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 2 — nginx}
+%% ============================================================
+
+\subsection{מה זה nginx?}
+
+\textbf{nginx} הוא שרת web — תוכנה שמאזינה לבקשות HTTP ומחזירה תגובות. כשנכתוב \texttt{http://localhost:8080} בדפדפן, nginx הוא זה שמחזיר את דף ה-HTML.
+
+\subsection{כיצד nginx עובד עם systemd}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1cm]
+  \node[block] (enable) {\texttt{systemctl enable nginx}};
+  \node[block, right=1.5cm of enable] (start2) {\texttt{systemctl start nginx}};
+  \node[block, below=of enable] (symlink) {יוצר symlink ב-\texttt{/etc/systemd/system/}};
+  \node[block, below=of start2] (running) {nginx רץ עכשיו};
+  \node[block, below=1.5cm of symlink] (reboot) {אתחול הבא: nginx עולה אוטומטי};
+
+  \draw[arrow] (enable) -- (symlink);
+  \draw[arrow] (start2) -- (running);
+  \draw[arrow] (symlink) -- (reboot);
+\end{tikzpicture}
+\end{center}
+
+\begin{lstlisting}[language=bash, caption={install\_nginx.sh — התקנה והפעלה}]
+# זיהוי ההפצה — אוטומטי דרך /etc/os-release
+distro="$(detect_distro)"
+
+case "${distro}" in
+    ubuntu|debian)
+        apt-get update -qq        # רענון רשימת החבילות
+        apt-get install -y nginx  # -y = כן לכל השאלות
+        ;;
+    fedora|rhel)
+        dnf install -y nginx      # dnf לא צריך update נפרד
+        ;;
+esac
+
+# העתק את קובץ הגדרות nginx שלנו
+cp "${CONFIG_FILE}" /etc/nginx/conf.d/default.conf
+
+# nginx -t מריץ dry-run של parser הקונפיגורציה
+# אם יש שגיאת syntax, הסקריפט נעצר כאן (בגלל set -e)
+nginx -t
+
+systemctl enable nginx   # הפעל בכל אתחול
+systemctl start nginx    # הפעל עכשיו
+\end{lstlisting}
+
+\subsection{קובץ הגדרות nginx}
+
+\begin{lstlisting}[caption={config/nginx/default.conf}]
+server {
+    listen 80;          # האזן על פורט 80 (HTTP)
+    server_name _;      # _ = קבל כל hostname
+
+    root /var/www/html; # תיקיית קבצי האתר
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # endpoint לבדיקת תקינות — משמש את סקריפט הניטור
+    location /health {
+        return 200 "OK\n";
+        add_header Content-Type text/plain;
+    }
+}
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 3 — חומת אש (Firewall)}
+%% ============================================================
+
+\subsection{מה זו חומת אש?}
+
+חומת אש היא תוכנה שמחליטה אילו חיבורי רשת מותרים. ברירת המחדל הבטוחה היא: \textbf{חסום הכל, אלא אם כן אישרנו במפורש}.
+
+\subsection{ההבדל בין ufw ל-firewalld}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{פעולה} & \textbf{Ubuntu (ufw)} & \textbf{Fedora (firewalld)} \\
+\midrule
+הפעל & \texttt{ufw enable} & \texttt{systemctl start firewalld} \\
+חסום הכל & \texttt{ufw default deny incoming} & ברירת מחדל \\
+אפשר SSH & \texttt{ufw allow ssh} & \texttt{firewall-cmd -{}-add-service=ssh} \\
+אפשר HTTP & \texttt{ufw allow 80/tcp} & \texttt{firewall-cmd -{}-add-service=http} \\
+שמור לצמיתות & אוטומטי & \texttt{-{}-permanent + -{}-reload} \\
+הצג חוקים & \texttt{ufw status numbered} & \texttt{firewall-cmd -{}-list-all} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{infobox}
+\textbf{המלכודת הכי נפוצה ב-Fedora:} \texttt{-{}-permanent} שומר את החוק בדיסק אבל לא מפעיל אותו. חייבים לקרוא \texttt{firewall-cmd -{}-reload} אחרי כל שינוי!
+\end{infobox}
+
+\begin{lstlisting}[language=bash, caption={setup\_firewall.sh — Ubuntu}]
+# חשוב: הגדר ברירות מחדל לפני הפעלת ufw
+# אחרת עלול לנעול את עצמך מחוץ ל-SSH!
+ufw default deny incoming   # חסום הכל
+ufw default allow outgoing  # אפשר יציאה
+
+# SSH חייב להיות ראשון — אחרת נאבד גישה
+ufw allow ssh               # = ufw allow 22/tcp
+
+ufw allow 80/tcp            # HTTP
+ufw allow 443/tcp           # HTTPS
+
+ufw --force enable          # --force מונע שאלת אישור אינטראקטיבית
+ufw reload
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 4 — Docker}
+%% ============================================================
+
+\subsection{ארכיטקטורת Docker}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1.2cm]
+  \node[block] (cli) {\texttt{docker} CLI};
+  \node[block, below=of cli] (socket) {\texttt{/var/run/docker.sock} (Unix Socket)};
+  \node[block, below=of socket] (daemon) {\texttt{dockerd} (daemon)};
+  \node[block, below=of daemon] (containerd) {\texttt{containerd} (container runtime)};
+
+  \draw[arrow] (cli) -- node[right,font=\tiny]{פקודות} (socket);
+  \draw[arrow] (socket) -- (daemon);
+  \draw[arrow] (daemon) -- (containerd);
+
+  \node[right=2cm of daemon, block, fill=green!15] (c1) {Container 1: nginx};
+  \node[right=2cm of containerd, block, fill=green!15] (c2) {Container 2: postgres};
+  \draw[arrow] (containerd) -- (c1);
+  \draw[arrow] (containerd) -- (c2);
+\end{tikzpicture}
+\end{center}
+
+\subsection{למה צריך GPG Key?}
+
+כשמוסיפים repository של Docker, Linux צריך לדעת שהחבילות הן אמיתיות ולא זויפו. Docker חותמים על החבילות שלהם עם \textbf{מפתח פרטי} (GPG private key). אנחנו מורידים את ה\textbf{מפתח ציבורי} ושומרים אותו — ו-apt/dnf יוודאו כל חבילה מולו.
+
+\begin{lstlisting}[language=bash, caption={setup\_docker.sh — הוספת GPG key ו-repository}]
+# הורד את ה-GPG key של Docker ושמור אותו
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# הוסף את ה-repository של Docker ל-apt
+# arch=$(dpkg --print-architecture) = amd64
+# VERSION_CODENAME = jammy (Ubuntu 22.04)
+echo "deb [arch=$(dpkg --print-architecture) \
+    signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" \
+    | tee /etc/apt/sources.list.d/docker.list
+
+apt-get update -qq
+apt-get install -y docker-ce docker-ce-cli containerd.io
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 5 — סקריפטי Bash}
+%% ============================================================
+
+\subsection{health\_check.sh — בדיקת תקינות}
+
+\begin{lstlisting}[language=bash, caption={health\_check.sh — מערך שגיאות ופונקציית בדיקה}]
+# מערך לאיסוף כשלונות — נבדוק הכל ונדווח בסוף
+FAILURES=()
+
+run_check() {
+    local name="$1"
+    local cmd="$2"
+
+    if eval "${cmd}" &>/dev/null; then
+        echo "  OK  ${name}"
+    else
+        echo "  FAIL  ${name}"
+        FAILURES+=("${name}")   # += מוסיף לסוף המערך
+    fi
+}
+
+run_check "nginx רץ"    "systemctl is-active nginx"
+run_check "nginx תקין"  "nginx -t"
+run_check "HTTP עובד"   "curl -sf http://localhost/health"
+
+# ${#FAILURES[@]} = אורך המערך
+if [[ "${#FAILURES[@]}" -eq 0 ]]; then
+    echo "הכל תקין!"
+    exit 0
+else
+    echo "${#FAILURES[@]} בדיקות נכשלו"
+    exit 1
+fi
+\end{lstlisting}
+
+\subsection{user\_report.sh — דוח משתמשים}
+
+\begin{lstlisting}[language=bash, caption={user\_report.sh — שימוש ב-awk ו-printf}]
+# printf לעיצוב עמודות מיושרות
+# %-15s = מחרוזת, מיושרת שמאלה, רוחב 15 תווים
+printf "%-15s %-20s %-10s\n" "משתמש" "קבוצות" "sudo"
+
+# /etc/passwd פורמט: username:x:UID:GID:comment:home:shell
+# UID >= 1000 = משתמשים אנושיים (לא מערכת)
+while IFS=: read -r username shell; do
+    user_groups=$(groups "${username}" | cut -d: -f2)
+
+    if [[ -f "/etc/sudoers.d/${username}" ]]; then
+        sudo_status="כן"
+    else
+        sudo_status="לא"
+    fi
+
+    printf "%-15s %-20s %-10s\n" \
+        "${username}" "${user_groups}" "${sudo_status}"
+
+done < <(awk -F: '$3 >= 1000 {print $1 ":" $7}' /etc/passwd)
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 6 — ניטור לוגים}
+%% ============================================================
+
+\subsection{מה זה journalctl?}
+
+כל שירות שמנוהל על ידי systemd כותב את הלוגים שלו ל-\textbf{journal} — מאגר לוגים מרכזי של המערכת. \texttt{journalctl} הוא הכלי לקרוא אותם.
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{פקודה} & \textbf{מה היא עושה} \\
+\midrule
+\texttt{journalctl -u nginx} & כל הלוגים של nginx \\
+\texttt{journalctl -u nginx -f} & לוגים בזמן אמת \\
+\texttt{journalctl -u nginx --since "1 hour ago"} & שעה אחורה \\
+\texttt{journalctl -u nginx -n 20} & 20 שורות אחרונות \\
+\texttt{journalctl -u nginx -p err} & רק שגיאות \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{קודי סטטוס HTTP}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{טווח} & \textbf{משמעות} & \textbf{דוגמה} \\
+\midrule
+2xx & הצלחה & 200 OK \\
+3xx & הפניה & 301 Moved Permanently \\
+4xx & שגיאת לקוח & 404 Not Found \\
+5xx & שגיאת שרת & 500 Internal Server Error \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[language=bash, caption={monitor\_logs.sh — ספירת שגיאות 5xx}]
+LOOKBACK="1 hour ago"
+ERROR_THRESHOLD=10
+
+# קרא לוגים מהשעה האחרונה
+NGINX_LOGS=$(journalctl -u nginx \
+    --since "${LOOKBACK}" \
+    --no-pager -o short 2>/dev/null || true)
+
+# grep -cE = ספור שורות תואמות לביטוי רגולרי
+# ' 5[0-9]{2} ' = פורט HTTP שמתחיל ב-5 (5xx)
+ERROR_COUNT=$(echo "${NGINX_LOGS}" \
+    | grep -cE ' 5[0-9]{2} ' || true)
+
+if [[ "${ERROR_COUNT}" -gt "${ERROR_THRESHOLD}" ]]; then
+    echo "ALERT: ${ERROR_COUNT} שגיאות 5xx בשעה האחרונה!"
+    exit 2
+fi
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{שלב 7 — שירותי systemd}
+%% ============================================================
+
+\subsection{מבנה קובץ .service}
+
+\begin{lstlisting}[caption={nginx-monitor.service — הסבר מלא}]
+[Unit]
+# תיאור השירות
+Description=nginx health monitor
+
+# התחל רק אחרי ש-nginx עלה
+After=nginx.service network.target
+
+[Service]
+# Type=simple: systemd מניח שהשירות רץ ישירות (לא fork לרקע)
+Type=simple
+
+# הפקודה להרצה — חייב נתיב מלא
+ExecStart=/usr/local/bin/nginx-monitor-loop.sh
+
+# Restart=always: הפעל מחדש אם עצר מכל סיבה
+Restart=always
+RestartSec=10
+
+# לוגים יגיעו ל-journal (ייראו ב-journalctl -u nginx-monitor)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+# WantedBy=multi-user.target: הפעל בסביבה רגילה (לאחר boot)
+WantedBy=multi-user.target
+\end{lstlisting}
+
+\subsection{Timer — חלופה מודרנית ל-cron}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{cron (ישן)} & \textbf{systemd timer (מודרני)} \\
+\midrule
+\texttt{0 * * * * /script.sh} & \texttt{OnUnitActiveSec=1h} \\
+לוגים? לא \\
+\quad & לוגים ב-journal \\
+דרוש cron daemon & מנוהל על ידי systemd \\
+הרצה ידנית? מסובך & \texttt{systemctl start log-alert} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{lstlisting}[caption={log-alert.timer}]
+[Timer]
+# הרץ 5 דקות אחרי אתחול
+OnBootSec=5min
+
+# ואז כל שעה
+OnUnitActiveSec=1h
+
+# אם המחשב היה כבוי בזמן שהיה צריך לרוץ — הרץ מיד באתחול
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+\end{lstlisting}
+
+\subsection{פקודות ניהול השירותים}
+
+\begin{lstlisting}[language=bash]
+# לאחר העתקת קבצי .service — חובה!
+systemctl daemon-reload
+
+# הפעל והגדר להפעלה אוטומטית
+systemctl enable --now nginx-monitor.service
+
+# הפעל את ה-timer
+systemctl enable --now log-alert.timer
+
+# ראה מצב השירות
+systemctl status nginx-monitor
+
+# ראה לוגים חיים
+journalctl -u nginx-monitor -f
+
+# ראה כל ה-timers
+systemctl list-timers
+\end{lstlisting}
+
+\newpage
+%% ============================================================
+\section{Git ו-GitHub — עבודה מקצועית}
+%% ============================================================
+
+\subsection{זרימת עבודה עם Git}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1cm]
+  \node[block, fill=green!20, minimum width=5cm] (main2) {\texttt{main} (branch יציב)};
+  \node[block, below left=1.5cm and 0.5cm of main2, minimum width=4cm] (feat) {\texttt{feat/phase-1-users}};
+  \node[block, below right=1.5cm and 0.5cm of main2, minimum width=4cm] (feat2) {\texttt{feat/phase-2-nginx}};
+
+  \draw[arrow] (main2) -- node[left,font=\tiny]{\texttt{checkout -b}} (feat);
+  \draw[arrow] (main2) -- node[right,font=\tiny]{\texttt{checkout -b}} (feat2);
+  \draw[arrow, bend left=30] (feat) to node[left,font=\tiny]{Pull Request} (main2);
+  \draw[arrow, bend right=30] (feat2) to node[right,font=\tiny]{Pull Request} (main2);
+\end{tikzpicture}
+\end{center}
+
+\begin{lstlisting}[language=bash, caption={זרימת עבודה לכל שלב}]
+# 1. עבור ל-main ועדכן
+git checkout main
+git pull
+
+# 2. צור branch חדש לשלב הנוכחי
+git checkout -b feat/phase-1-users
+
+# 3. עבוד, ערוך קבצים, בדוק
+
+# 4. הוסף לקומיט
+git add scripts/common/create_users.sh
+git commit -m "feat(users): implement user creation from config file"
+
+# 5. שלח ל-GitHub
+git push --set-upstream origin feat/phase-1-users
+
+# 6. פתח Pull Request ב-GitHub עם: Closes #2
+\end{lstlisting}
+
+\subsection{GitHub Actions — CI אוטומטי}
+
+\begin{center}
+\begin{tikzpicture}[node distance=1cm]
+  \node[startend] (push2) {git push};
+  \node[block, below=of push2] (trigger) {GitHub Actions מופעל};
+  \node[block, below=of trigger] (checkout2) {\texttt{actions/checkout@v4}};
+  \node[block, below=of checkout2] (shell) {shellcheck על כל קבצי .sh};
+  \node[decision, below=of shell] (ok) {עבר?};
+  \node[block, right=2cm of ok, fill=green!20] (merge) {PR מאושר למיזוג};
+  \node[block, left=2cm of ok, fill=red!20] (block) {PR חסום};
+
+  \draw[arrow] (push2) -- (trigger);
+  \draw[arrow] (trigger) -- (checkout2);
+  \draw[arrow] (checkout2) -- (shell);
+  \draw[arrow] (shell) -- (ok);
+  \draw[arrow] (ok) -- node[above,font=\tiny]{כן} (merge);
+  \draw[arrow] (ok) -- node[above,font=\tiny]{לא} (block);
+\end{tikzpicture}
+\end{center}
+
+\newpage
+%% ============================================================
+\section{הרצת הפרויקט — מדריך מלא}
+%% ============================================================
+
+\subsection{דרישות מוקדמות}
+
+\begin{enumerate}[noitemsep]
+  \item \textbf{VirtualBox} — מנוע המכונות הוירטואליות: \url{https://www.virtualbox.org}
+  \item \textbf{Vagrant} — מנהל המכונות: \url{https://developer.hashicorp.com/vagrant}
+  \item \textbf{make} (Windows): \texttt{winget install GnuWin32.Make}
+\end{enumerate}
+
+\subsection{הפעלה ראשונה}
+
+\begin{lstlisting}[language=bash, caption={הרצת הפרויקט לראשונה}]
+# שלב 1: הפעל את שתי המכונות
+# בפעם הראשונה יוריד תמונות (~1GB) — ייקח 5-10 דקות
+make up
+
+# שלב 2: בדוק שnginx עובד מהדפדפן
+# Ubuntu: http://localhost:8080
+# Fedora: http://localhost:8081
+
+# שלב 3: כנס ל-Ubuntu ובדוק
+make ssh-ubuntu
+
+# בתוך המכונה:
+sudo bash /opt/provisioner/scripts/common/health_check.sh
+sudo bash /opt/provisioner/scripts/common/user_report.sh
+sudo ufw status numbered
+systemctl status nginx docker nginx-monitor
+journalctl -u nginx-monitor --no-pager -n 20
+exit
+
+# שלב 4: בדוק idempotency — הרץ שוב, אמור לעבוד ללא שגיאות
+make provision-ubuntu
+\end{lstlisting}
+
+\subsection{פקודות שימושיות}
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{פקודה} & \textbf{מה היא עושה} \\
+\midrule
+\texttt{make up} & הפעל שתי המכונות \\
+\texttt{make provision-ubuntu} & הרץ provisioner על Ubuntu \\
+\texttt{make provision-fedora} & הרץ provisioner על Fedora \\
+\texttt{make ssh-ubuntu} & פתח shell ב-Ubuntu \\
+\texttt{make ssh-fedora} & פתח shell ב-Fedora \\
+\texttt{make down} & כבה המכונות \\
+\texttt{make clean} & מחק המכונות לגמרי \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%% ============================================================
+\section{סיכום}
+%% ============================================================
+
+פרויקט זה לימד אותי שהדרך הטובה ביותר ללמוד לינוקס היא לבנות משהו שצריך לרוץ עליו — על הפצות שונות, בסביבות שונות.
+
+ההבדלים בין Ubuntu ו-Fedora אינם רק בשמות הפקודות. הם מייצגים פילוסופיות שונות של ניהול מערכת: Ubuntu מכוונת לנגישות ומהירות התקנה, Fedora מכוונת לחדשנות ולבסיס לסביבות ארגוניות (RHEL). הבנת שניהם נותנת תמונה מלאה של עולם לינוקס.
+
+הכלים שנלמדו כאן — systemd, bash scripting, firewall management, Docker, CI/CD עם GitHub Actions — הם הכלים שמשמשים מהנדסי DevOps ומנהלי מערכת ב-RedHat, AWS, Google, ו-Meta בכל יום.
+
+\vspace{1cm}
+\begin{infobox}
+\centering
+\textbf{הקוד המלא זמין ב-GitHub:}\\
+\url{https://github.com/EsteeCohen/multi-distro-provisioner}
+\end{infobox}
+
+\end{document}

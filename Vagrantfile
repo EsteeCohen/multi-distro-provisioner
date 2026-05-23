@@ -1,4 +1,4 @@
-# Vagrantfile — defines two Linux VMs for this lab.
+# Vagrantfile ג€” defines two Linux VMs for this lab.
 #
 # WHY Vagrant?
 #   Vagrant lets you describe a VM in a plain text file and spin it up with
@@ -15,15 +15,15 @@
 
 Vagrant.configure("2") do |config|
 
-  # ── Ubuntu Node ────────────────────────────────────────────────────────────
-  config.define "ubuntu-node" do |ubuntu|
+  # ג”€ג”€ Ubuntu Node ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  config.vm.define "ubuntu-node" do |ubuntu|
     ubuntu.vm.box      = "ubuntu/jammy64"   # Ubuntu 22.04 LTS
     ubuntu.vm.hostname = "ubuntu-node"
 
-    # Static private IP — always reachable at this address from your laptop
+    # Static private IP ג€” always reachable at this address from your laptop
     ubuntu.vm.network "private_network", ip: "192.168.56.10"
 
-    # Port forward: curl localhost:8080 on your laptop → hits nginx inside the VM
+    # Port forward: curl localhost:8080 on your laptop ג†’ hits nginx inside the VM
     ubuntu.vm.network "forwarded_port", guest: 80, host: 8080
 
     ubuntu.vm.provider "virtualbox" do |vb|
@@ -33,12 +33,12 @@ Vagrant.configure("2") do |config|
     end
 
     # Vagrant runs this script as root inside the VM after first boot
-    ubuntu.vm.provision "shell", path: "scripts/ubuntu/provision.sh"
+    ubuntu.vm.provision "shell", inline: "bash /vagrant/scripts/ubuntu/provision.sh"
   end
 
-  # ── Fedora Node ────────────────────────────────────────────────────────────
-  config.define "fedora-node" do |fedora|
-    fedora.vm.box      = "generic/fedora39"   # Fedora 39
+  # ג”€ג”€ Fedora Node ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  config.vm.define "fedora-node" do |fedora|
+    fedora.vm.box      = "bento/fedora-39"   # Fedora 39
     fedora.vm.hostname = "fedora-node"
 
     fedora.vm.network "private_network", ip: "192.168.56.11"
@@ -52,7 +52,8 @@ Vagrant.configure("2") do |config|
       vb.cpus   = 1
     end
 
-    fedora.vm.provision "shell", path: "scripts/fedora/provision.sh"
+    fedora.vm.provision "shell", inline: "bash /vagrant/scripts/fedora/provision.sh"
   end
 
 end
+
