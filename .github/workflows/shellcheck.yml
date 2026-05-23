@@ -1,0 +1,38 @@
+# GitHub Actions — Shellcheck CI
+#
+# WHY this exists:
+#   Every time you push code or open a PR, GitHub runs this automatically.
+#   It catches bugs in bash scripts BEFORE they run on a real machine.
+#   shellcheck is like a compiler warning for bash — it finds things like
+#   unquoted variables, missing error handling, and common mistakes.
+#
+# HOW to read this file:
+#   on:       → what triggers the workflow (push or PR touching scripts/)
+#   jobs:     → what to actually run
+#   steps:    → the sequence of commands inside the job
+
+name: Shellcheck
+
+on:
+  push:
+    paths:
+      - "scripts/**"
+  pull_request:
+    paths:
+      - "scripts/**"
+
+jobs:
+  shellcheck:
+    name: Lint bash scripts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ludeeus/action-shellcheck runs shellcheck on every .sh file it finds
+      - name: Run shellcheck on all scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "./scripts"
+          severity: warning
