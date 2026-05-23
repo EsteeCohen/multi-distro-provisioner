@@ -1,0 +1,21 @@
+# log-alert.service — runs the log monitoring script as a systemd service.
+# Implemented in: feat/phase-7-systemd (Issue #8)
+#
+# WHY run log monitoring as a service?
+#   A script you run by hand only checks logs when you remember to run it.
+#   A systemd service runs continuously in the background and survives reboots.
+
+[Unit]
+Description=Application log alert monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/provisioner/scripts/common/monitor_logs.sh
+Restart=on-failure
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

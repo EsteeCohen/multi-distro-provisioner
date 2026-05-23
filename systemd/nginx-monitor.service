@@ -1,0 +1,26 @@
+# nginx-monitor.service — watches nginx and restarts it if it goes down.
+# Implemented in: feat/phase-7-systemd (Issue #8)
+#
+# WHY a custom monitor service?
+#   systemd already restarts nginx on crash via Restart=on-failure in nginx's
+#   own unit. This service adds a layer that actively polls the /health endpoint
+#   and restarts nginx if it stops responding — even if the process is alive.
+#
+# To install:
+#   cp nginx-monitor.service /etc/systemd/system/
+#   systemctl daemon-reload
+#   systemctl enable --now nginx-monitor
+
+[Unit]
+Description=nginx health monitor
+After=nginx.service
+Requires=nginx.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nginx-monitor.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
