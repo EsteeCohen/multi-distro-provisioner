@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# user_report.sh ג€” prints a formatted report of all non-system users.
+# user_report.sh -- prints a formatted report of all non-system users.
 # Run manually: bash scripts/common/user_report.sh
 #
 # Closes #6
@@ -14,11 +14,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/utils.sh"
 
-log_step "User Report ג€” $(hostname)"
+log_step "User Report -- $(hostname)"
 echo "Generated: $(date)"
 echo ""
 
-# ג”€ג”€ printf for aligned output ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - printf for aligned output -
 # WHY printf instead of echo?
 #   printf lets you control column width with format specifiers:
 #   %-15s = left-align string, minimum 15 characters wide
@@ -26,7 +26,7 @@ echo ""
 printf "%-15s %-20s %-10s %-10s\n" "USERNAME" "GROUPS" "SUDO" "SHELL"
 printf "%-15s %-20s %-10s %-10s\n" "--------" "------" "----" "-----"
 
-# ג”€ג”€ Loop over users with UID >= 1000 ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Loop over users with UID >= 1000 -
 # WHY UID >= 1000?
 #   Linux reserves UIDs 0-999 for system users (root, daemon, www-data, etc.)
 #   Real human users start at UID 1000. We only want to report on those.
@@ -70,7 +70,7 @@ while IFS=: read -r username shell; do
         "${shell}"
 
 done < <(awk -F: '$3 >= 1000 && $3 != 65534 {print $1 ":" $7}' /etc/passwd)
-# ג†‘ WHY "< <(...)"?
+#  WHY "< <(...)"?
 #   This is process substitution. It feeds the output of the awk command
 #   into the while loop as if it were a file.
 #   It's needed because piping (awk ... | while read) would run the while
@@ -79,7 +79,7 @@ done < <(awk -F: '$3 >= 1000 && $3 != 65534 {print $1 ":" $7}' /etc/passwd)
 
 echo ""
 
-# ג”€ג”€ Docker group members ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Docker group members -
 log_info "Docker group members:"
 if getent group docker &>/dev/null; then
     # getent group docker prints: docker:x:998:devops,appuser
@@ -96,7 +96,7 @@ fi
 
 echo ""
 
-# ג”€ג”€ /app directory ownership ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - /app directory ownership -
 log_info "/app directory:"
 if [[ -d /app ]]; then
     # ls -ld = list directory itself (not contents), long format

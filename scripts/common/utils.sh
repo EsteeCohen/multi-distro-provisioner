@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# utils.sh ג€” shared functions sourced by every other script.
+# utils.sh -- shared functions sourced by every other script.
 #
 # WHY a shared utils file?
 #   Every script needs to print logs, detect the distro, and check for root.
@@ -11,23 +11,23 @@
 #   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 #   source "${SCRIPT_DIR}/../common/utils.sh"
 
-# ג”€ג”€ set -euo pipefail ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - set -euo pipefail -
 # WHY these three flags together?
-#   -e  ג†’ exit immediately if any command fails (returns non-zero exit code)
-#   -u  ג†’ treat unset variables as errors (catches typos like $HOEM)
-#   -o pipefail ג†’ if any command in a pipe fails, the whole pipe fails
+#   -e  -> exit immediately if any command fails (returns non-zero exit code)
+#   -u  -> treat unset variables as errors (catches typos like $HOEM)
+#   -o pipefail -> if any command in a pipe fails, the whole pipe fails
 #                 without this: "failing_cmd | echo ok" would succeed
 set -euo pipefail
 
-# ג”€ג”€ Color codes ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Color codes -
 # ANSI escape codes for terminal colors. \033 is the escape character.
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m'   # NC = No Color ג€” resets back to default
+NC='\033[0m'   # NC = No Color -- resets back to default
 
-# ג”€ג”€ Logging functions ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Logging functions -
 # WHY prefix with a timestamp?
 #   When provisioning takes 2 minutes, you want to know which step is slow.
 
@@ -45,12 +45,12 @@ log_error() {
 }
 
 log_step() {
-    echo -e "\n${BLUE}ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•${NC}"
+    echo -e "\n${BLUE}========================================${NC}"
     echo -e "${BLUE}  $*${NC}"
-    echo -e "${BLUE}ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•ג•${NC}\n"
+    echo -e "${BLUE}========================================${NC}\n"
 }
 
-# ג”€ג”€ Root check ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Root check -
 # WHY check for root?
 #   useradd, apt install, systemctl all require root. Failing 10 commands
 #   in with "Permission denied" is confusing. Fail fast with a clear message.
@@ -61,7 +61,7 @@ check_root() {
     fi
 }
 
-# ג”€ג”€ Distro detection ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Distro detection -
 # WHY /etc/os-release?
 #   It's the standard file for distro identification on all modern Linux
 #   systems. Both Ubuntu and Fedora (and RHEL, Debian, etc.) ship it.
@@ -77,7 +77,7 @@ detect_distro() {
     fi
 }
 
-# ג”€ג”€ Package manager helper ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Package manager helper -
 # Returns the correct package manager command for the current distro
 get_pkg_manager() {
     local distro
@@ -93,10 +93,10 @@ get_pkg_manager() {
     esac
 }
 
-# ג”€ג”€ Idempotency helper ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Idempotency helper -
 # WHY check if something is already installed before installing?
 #   Running a script twice should produce the same result as running it once.
-#   This property is called "idempotency" ג€” critical for automation.
+#   This property is called "idempotency" -- critical for automation.
 is_installed() {
     command -v "$1" &>/dev/null
 }

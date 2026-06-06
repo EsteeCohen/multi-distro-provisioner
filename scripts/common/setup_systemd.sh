@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup_systemd.sh ג€” installs and enables the custom systemd service units.
+# setup_systemd.sh -- installs and enables the custom systemd service units.
 #
 # Closes #8
 
@@ -15,10 +15,10 @@ PROVISIONER_DIR="/opt/provisioner"
 check_root
 log_step "Phase 7: systemd Services"
 
-# ג”€ג”€ 1. Install the provisioner scripts into /opt ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 1. Install the provisioner scripts into /opt -
 # WHY /opt?
 #   /opt is for optional/add-on software not managed by the package manager.
-#   Our scripts aren't system scripts ג€” they belong in /opt, not /usr/bin.
+#   Our scripts aren't system scripts -- they belong in /opt, not /usr/bin.
 #   systemd unit files reference absolute paths, so scripts must be installed
 #   at a known location inside the VM.
 log_info "Installing provisioner scripts to ${PROVISIONER_DIR}"
@@ -28,7 +28,7 @@ chmod +x "${PROVISIONER_DIR}"/scripts/common/*.sh
 chmod +x "${PROVISIONER_DIR}"/scripts/ubuntu/*.sh
 chmod +x "${PROVISIONER_DIR}"/scripts/fedora/*.sh
 
-# ג”€ג”€ 2. Install the monitor loop script to /usr/local/bin ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 2. Install the monitor loop script to /usr/local/bin -
 # WHY /usr/local/bin?
 #   The nginx-monitor.service unit references /usr/local/bin/nginx-monitor-loop.sh
 #   /usr/local/bin is in $PATH and is the correct place for locally-installed executables.
@@ -37,12 +37,12 @@ cp "${REPO_ROOT}/scripts/common/nginx_monitor_loop.sh" \
    /usr/local/bin/nginx-monitor-loop.sh
 chmod +x /usr/local/bin/nginx-monitor-loop.sh
 
-# ג”€ג”€ 3. Copy unit files to /etc/systemd/system/ ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 3. Copy unit files to /etc/systemd/system/ -
 # WHY /etc/systemd/system/?
 #   systemd looks for unit files in several places. In priority order:
-#     /etc/systemd/system/    ג†’ admin-managed (our files go here)
-#     /run/systemd/system/    ג†’ runtime generated
-#     /lib/systemd/system/    ג†’ package-installed (nginx's own unit is here)
+#     /etc/systemd/system/    -> admin-managed (our files go here)
+#     /run/systemd/system/    -> runtime generated
+#     /lib/systemd/system/    -> package-installed (nginx's own unit is here)
 #
 #   Files in /etc/systemd/system/ take precedence over /lib/systemd/system/
 #   so you can override a package's unit file by placing yours here.
@@ -51,19 +51,19 @@ cp "${REPO_ROOT}/systemd/nginx-monitor.service" "${SYSTEMD_DIR}/"
 cp "${REPO_ROOT}/systemd/log-alert.service"     "${SYSTEMD_DIR}/"
 cp "${REPO_ROOT}/systemd/log-alert.timer"       "${SYSTEMD_DIR}/"
 
-# ג”€ג”€ 4. daemon-reload ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 4. daemon-reload -
 # WHY daemon-reload?
 #   systemd reads unit files into memory at startup.
 #   If you add or modify a unit file, systemd doesn't know until you reload.
-#   daemon-reload rescans all unit files ג€” ALWAYS run this after copying units.
+#   daemon-reload rescans all unit files -- ALWAYS run this after copying units.
 #   Without it, systemctl enable/start will use the old (or missing) definition.
 log_info "Reloading systemd daemon"
 systemctl daemon-reload
 
-# ג”€ג”€ 5. Enable and start services ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 5. Enable and start services -
 log_info "Enabling and starting nginx-monitor"
 systemctl enable nginx-monitor.service
-systemctl start  nginx-monitor.service
+systemctl restart nginx-monitor.service
 
 # For the log monitor, we enable the TIMER (not the service directly)
 # The timer will trigger the service on its own schedule
@@ -71,7 +71,7 @@ log_info "Enabling log-alert timer"
 systemctl enable log-alert.timer
 systemctl start  log-alert.timer
 
-# ג”€ג”€ 6. Show status of everything ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 6. Show status of everything -
 # WHY show status at the end?
 #   Gives immediate visual confirmation that everything started correctly.
 #   'is-active' is machine-readable; 'status' is human-readable.
@@ -81,7 +81,7 @@ systemctl status nginx-monitor.service --no-pager -l || true
 echo ""
 systemctl status log-alert.timer --no-pager -l || true
 
-# List all active timers ג€” good way to verify timers are working
+# List all active timers -- good way to verify timers are working
 echo ""
 log_info "Active timers:"
 systemctl list-timers --no-pager

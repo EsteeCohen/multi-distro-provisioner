@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# provision.sh ג€” Fedora entry point. Called by Vagrant on first boot.
+# provision.sh -- Fedora entry point. Called by Vagrant on first boot.
 
 set -euo pipefail
 

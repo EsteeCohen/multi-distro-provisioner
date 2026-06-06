@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# provision.sh ג€” Ubuntu entry point. Called by Vagrant on first boot.
+# provision.sh -- Ubuntu entry point. Called by Vagrant on first boot.
 #
 # WHY a separate file per distro?
 #   Ubuntu and Fedora use different package managers and firewall tools.

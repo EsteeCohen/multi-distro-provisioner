@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup_firewall.sh ג€” configures ufw (Uncomplicated Firewall) on Ubuntu.
+# setup_firewall.sh -- configures ufw (Uncomplicated Firewall) on Ubuntu.
 #
 # Closes #4
 #
@@ -15,16 +15,16 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../common/utils.sh"
 
 check_root
-log_step "Phase 3: Firewall (ufw) ג€” Ubuntu"
+log_step "Phase 3: Firewall (ufw) -- Ubuntu"
 
-# ג”€ג”€ 1. Install ufw if missing ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 1. Install ufw if missing -
 # ufw is usually pre-installed on Ubuntu but may be missing in minimal images
 if ! is_installed ufw; then
     log_info "Installing ufw"
     apt-get install -y ufw
 fi
 
-# ג”€ג”€ 2. Set default policies ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 2. Set default policies -
 # WHY set defaults before allowing anything?
 #   A firewall works by matching rules top-to-bottom.
 #   The default policy is what happens when NO rule matches.
@@ -38,7 +38,7 @@ log_info "Setting default policies"
 ufw default deny incoming
 ufw default allow outgoing
 
-# ג”€ג”€ 3. Allow SSH ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 3. Allow SSH -
 # WHY SSH first, always?
 #   If you enable the firewall without allowing SSH, you lose access
 #   to the machine permanently (or until you get console access).
@@ -49,7 +49,7 @@ ufw default allow outgoing
 log_info "Allowing SSH (port 22)"
 ufw allow ssh
 
-# ג”€ג”€ 4. Allow HTTP and HTTPS ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 4. Allow HTTP and HTTPS -
 # Port 80  = HTTP  (unencrypted web traffic)
 # Port 443 = HTTPS (encrypted web traffic)
 # Both use TCP protocol (reliable, connection-based)
@@ -57,21 +57,21 @@ log_info "Allowing HTTP (port 80) and HTTPS (port 443)"
 ufw allow 80/tcp
 ufw allow 443/tcp
 
-# ג”€ג”€ 5. Enable the firewall ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 5. Enable the firewall -
 # WHY --force?
 #   Without --force, ufw asks "Command may disrupt existing ssh connections.
-#   Proceed with operation (y|n)?" ג€” this blocks automated scripts.
+#   Proceed with operation (y|n)?" -- this blocks automated scripts.
 #   --force answers yes automatically.
 #
 # ufw status after enabling should show: Status: active
 log_info "Enabling ufw"
 ufw --force enable
 
-# ג”€ג”€ 6. Reload to apply all rules ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 6. Reload to apply all rules -
 ufw reload
 
-# ג”€ג”€ 7. Show final state ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
-# 'numbered' shows rules with index numbers ג€” useful for deleting specific rules
+# - 7. Show final state -
+# 'numbered' shows rules with index numbers -- useful for deleting specific rules
 log_info "Firewall rules active:"
 ufw status numbered
 

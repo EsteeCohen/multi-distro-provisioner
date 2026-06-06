@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# monitor_logs.sh ג€” parses nginx logs and alerts when error rate is too high.
+# monitor_logs.sh -- parses nginx logs and alerts when error rate is too high.
 # Can be run manually or as a systemd service (see systemd/log-alert.service).
 #
 # Closes #7
@@ -7,14 +7,14 @@
 # WHY log monitoring?
 #   A server can be "running" (process is alive) but still broken
 #   (returning errors to every user). Health checks catch the first case.
-#   Log monitoring catches the second ג€” it reads what nginx actually returned.
+#   Log monitoring catches the second -- it reads what nginx actually returned.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/utils.sh"
 
-# ג”€ג”€ Configuration ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Configuration -
 # How far back to look for errors (journalctl --since format)
 LOOKBACK="1 hour ago"
 
@@ -28,14 +28,14 @@ LOG_FILE="${LOG_DIR}/monitor.log"
 check_root
 log_step "Phase 6: Log Monitoring"
 
-# ג”€ג”€ Create log directory ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Create log directory -
 # WHY /var/log/app/?
 #   /var/log/ is the standard Linux location for log files.
 #   We create a subdirectory so our logs don't mix with system logs.
 mkdir -p "${LOG_DIR}"
 chown appuser:appuser "${LOG_DIR}" 2>/dev/null || true
 
-# ג”€ג”€ Helper: write to both terminal and log file ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - Helper: write to both terminal and log file -
 # tee writes to both stdout (terminal) and a file at the same time
 # -a = append mode (don't overwrite the file)
 write_log() {
@@ -44,20 +44,20 @@ write_log() {
 
 write_log "=== Monitor run started on $(hostname) ==="
 
-# ג”€ג”€ 1. Check nginx service state via systemd ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 1. Check nginx service state via systemd -
 # WHY check systemd first, before logs?
 #   If nginx is down, there are no access logs to parse.
 #   Fail fast with a clear message.
 write_log "Checking nginx service status"
 
 if ! systemctl is-active --quiet nginx; then
-    write_log "CRITICAL: nginx is not running ג€” attempting restart"
+    write_log "CRITICAL: nginx is not running -- attempting restart"
     systemctl restart nginx
 
     if systemctl is-active --quiet nginx; then
         write_log "INFO: nginx restarted successfully"
     else
-        write_log "CRITICAL: nginx failed to restart ג€” manual intervention needed"
+        write_log "CRITICAL: nginx failed to restart -- manual intervention needed"
         # journalctl -u nginx -n 20 = last 20 lines of nginx logs
         journalctl -u nginx -n 20 --no-pager >> "${LOG_FILE}"
         exit 1
@@ -66,7 +66,7 @@ else
     write_log "INFO: nginx is active"
 fi
 
-# ג”€ג”€ 2. Count HTTP 5xx errors in nginx access log ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 2. Count HTTP 5xx errors in nginx access log -
 # WHY grep for 5xx?
 #   HTTP status codes:
 #     2xx = success (200 OK, 201 Created)
@@ -96,9 +96,9 @@ ERROR_COUNT=$(echo "${NGINX_LOGS}" | grep -cE ' 5[0-9]{2} ' || true)
 
 write_log "INFO: Found ${ERROR_COUNT} HTTP 5xx errors in the last hour"
 
-# ג”€ג”€ 3. Alert if error rate exceeds threshold ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 3. Alert if error rate exceeds threshold -
 # WHY a threshold instead of alerting on every error?
-#   One 500 error might be a fluke ג€” a user hit a broken URL.
+#   One 500 error might be a fluke -- a user hit a broken URL.
 #   Ten 500 errors in an hour means something is wrong systemically.
 #   Thresholds reduce noise and focus alerts on real problems.
 if [[ "${ERROR_COUNT}" -gt "${ERROR_THRESHOLD}" ]]; then
@@ -113,7 +113,7 @@ if [[ "${ERROR_COUNT}" -gt "${ERROR_THRESHOLD}" ]]; then
     exit 2
 fi
 
-# ג”€ג”€ 4. Show recent nginx error log entries ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 4. Show recent nginx error log entries -
 # /var/log/nginx/error.log is where nginx writes its own error messages
 # (different from access.log which logs every request)
 write_log "Recent nginx error log entries:"
@@ -131,7 +131,7 @@ else
     write_log "INFO: ${NGINX_ERROR_LOG} not found (nginx may log via journald only)"
 fi
 
-# ג”€ג”€ 5. Disk space check ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+# - 5. Disk space check -
 # WHY check disk in a log monitor?
 #   Logs fill up disks. A full disk causes nginx to fail writing logs,
 #   which causes errors, which creates more logs... it's a bad cycle.
@@ -139,7 +139,7 @@ DISK_USAGE=$(df -h /var/log | awk 'NR==2 {print $5}' | tr -d '%')
 write_log "INFO: /var/log disk usage: ${DISK_USAGE}%"
 
 if [[ "${DISK_USAGE}" -gt 85 ]]; then
-    write_log "WARN: /var/log is ${DISK_USAGE}% full ג€” consider log rotation"
+    write_log "WARN: /var/log is ${DISK_USAGE}% full -- consider log rotation"
 fi
 
 write_log "=== Monitor run complete ==="
