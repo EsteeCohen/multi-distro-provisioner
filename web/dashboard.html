@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>multi-distro-provisioner — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ubuntu:  #E95420;
+    --fedora:  #3C6EB4;
+    --bg:      #0f1117;
+    --surface: #1a1d27;
+    --surface2:#252836;
+    --border:  #2e3147;
+    --text:    #e2e8f0;
+    --muted:   #64748b;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --yellow:  #f59e0b;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ---- header ---- */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo {
+    width: 34px; height: 34px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--ubuntu), var(--fedora));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 15px; color: #fff; flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 1em; font-weight: 700; }
+  .header-text p  { font-size: 0.8em; color: var(--muted); margin-top: 2px; }
+
+  /* ---- layout ---- */
+  .main { padding: 24px; max-width: 1360px; margin: 0 auto; }
+
+  .distro-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 860px) { .distro-grid { grid-template-columns: 1fr; } }
+
+  /* ---- distro panel ---- */
+  .panel {
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .panel-head.ubuntu { border-bottom: 2px solid var(--ubuntu); background: linear-gradient(135deg,rgba(233,84,32,.18),rgba(233,84,32,.04)); }
+  .panel-head.fedora { border-bottom: 2px solid var(--fedora); background: linear-gradient(135deg,rgba(60,110,180,.18),rgba(60,110,180,.04)); }
+
+  .panel-head h2 { font-size: 1em; font-weight: 700; flex: 1; min-width: 0; }
+
+  .distro-badge {
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.72em; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .8px;
+    flex-shrink: 0;
+  }
+  .distro-badge.ubuntu { background: rgba(233,84,32,.18); color: var(--ubuntu); border: 1px solid rgba(233,84,32,.5); }
+  .distro-badge.fedora { background: rgba(60,110,180,.18); color: var(--fedora); border: 1px solid rgba(60,110,180,.5); }
+
+  .health-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.78em; color: var(--muted);
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); flex-shrink: 0;
+    transition: background .3s, box-shadow .3s;
+  }
+  .dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2.5s infinite; }
+  .dot.offline { background: var(--red); }
+  .dot.pending { background: var(--yellow); animation: blink 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+  .panel-body { padding: 18px 20px; }
+
+  /* ---- cards ---- */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card:last-of-type { margin-bottom: 0; }
+  .card-title {
+    font-size: 0.68em; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 10px;
+  }
+
+  /* ---- rows ---- */
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .row:last-child { border-bottom: none; }
+  .rkey { color: var(--muted); font-size: .85em; }
+  .rval { font-family: 'JetBrains Mono','Consolas','Monaco',monospace; font-size: .82em; }
+
+  /* ---- badges ---- */
+  .badge {
+    padding: 2px 8px; border-radius: 4px;
+    font-size: .7em; font-weight: 700; font-family: monospace;
+    flex-shrink: 0;
+  }
+  .badge.running { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+  .badge.waiting { background: rgba(245,158,11,.12); color: var(--yellow); border: 1px solid rgba(245,158,11,.3); }
+
+  /* ---- tags ---- */
+  .tags { margin-top: 8px; }
+  .tag {
+    display: inline-block;
+    padding: 3px 8px; margin: 2px;
+    border-radius: 4px; font-family: monospace; font-size: .76em;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+
+  /* ---- open button ---- */
+  .open-btn {
+    display: inline-block;
+    margin-top: 14px; padding: 7px 16px;
+    border-radius: 6px; font-size: .82em; font-weight: 700;
+    text-decoration: none; transition: opacity .2s;
+  }
+  .open-btn:hover { opacity: .8; }
+  .open-btn.ubuntu { background: var(--ubuntu); color: #fff; }
+  .open-btn.fedora { background: var(--fedora); color: #fff; }
+
+  /* ---- architecture ---- */
+  .arch {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .arch h2 {
+    font-size: .72em; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 18px;
+  }
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 180px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  @media (max-width: 700px) { .arch-grid { grid-template-columns: 1fr; } }
+  .arch-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .arch-node h3 { font-size: .88em; margin-bottom: 8px; }
+  .arch-node ul { list-style: none; font-size: .78em; color: var(--muted); line-height: 1.9; }
+  .arch-center { text-align: center; }
+  .laptop-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 12px;
+    font-size: .8em;
+  }
+  .laptop-box .lbl { font-weight: 700; margin-bottom: 6px; }
+  .laptop-box .sub { color: var(--muted); font-size: .9em; }
+  .laptop-box .cmd { font-family: monospace; margin-top: 8px; font-size: .9em; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; display: inline-block; }
+
+  .arrows { color: var(--muted); font-size: .8em; margin-top: 8px; }
+
+  /* ---- footer ---- */
+  .footer {
+    text-align: right; padding: 14px 0 0;
+    color: var(--muted); font-size: .76em;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">M</div>
+  <div class="header-text">
+    <h1>multi-distro-provisioner</h1>
+    <p>Ubuntu 22.04 LTS &nbsp;&middot;&nbsp; Fedora 39 &nbsp;&middot;&nbsp; Live Infrastructure Dashboard</p>
+  </div>
+</header>
+
+<main class="main">
+  <div class="distro-grid">
+
+    <!-- Ubuntu panel -->
+    <div class="panel">
+      <div class="panel-head ubuntu">
+        <div style="flex:1;min-width:0">
+          <h2>ubuntu-node</h2>
+          <span style="font-size:.78em;color:var(--muted)">localhost:8080 &rarr; 192.168.56.10</span>
+        </div>
+        <span class="distro-badge ubuntu">Ubuntu 22.04</span>
+        <div class="health-pill">
+          <div class="dot pending" id="u-dot"></div>
+          <span id="u-status">checking&hellip;</span>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <div class="card">
+          <div class="card-title">Services</div>
+          <div class="row"><span class="rkey">nginx</span>         <span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">docker</span>        <span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">nginx-monitor.service</span><span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">log-alert.timer</span><span class="badge waiting">waiting</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Firewall &mdash; ufw</div>
+          <div class="row"><span class="rkey">default incoming</span><span class="rval">deny</span></div>
+          <div class="tags">
+            <span class="tag">22/tcp  SSH</span>
+            <span class="tag">80/tcp  HTTP</span>
+            <span class="tag">443/tcp HTTPS</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Users</div>
+          <div class="row"><span class="rkey">devops</span>  <span class="rval">sudo &middot; docker group</span></div>
+          <div class="row"><span class="rkey">appuser</span> <span class="rval">docker group &middot; owns /app</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">System</div>
+          <div class="row"><span class="rkey">package manager</span><span class="rval">apt (Debian-family)</span></div>
+          <div class="row"><span class="rkey">provisioner path</span><span class="rval">/opt/provisioner</span></div>
+          <div class="row"><span class="rkey">health endpoint</span><span class="rval">http://localhost:8080/health</span></div>
+        </div>
+
+        <a class="open-btn ubuntu" href="http://localhost:8080" target="_blank">Open Ubuntu VM &rarr;</a>
+
+      </div>
+    </div>
+
+    <!-- Fedora panel -->
+    <div class="panel">
+      <div class="panel-head fedora">
+        <div style="flex:1;min-width:0">
+          <h2>fedora-node</h2>
+          <span style="font-size:.78em;color:var(--muted)">localhost:8081 &rarr; 192.168.56.11</span>
+        </div>
+        <span class="distro-badge fedora">Fedora 39</span>
+        <div class="health-pill">
+          <div class="dot pending" id="f-dot"></div>
+          <span id="f-status">checking&hellip;</span>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <div class="card">
+          <div class="card-title">Services</div>
+          <div class="row"><span class="rkey">nginx</span>         <span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">docker</span>        <span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">nginx-monitor.service</span><span class="badge running">running</span></div>
+          <div class="row"><span class="rkey">log-alert.timer</span><span class="badge waiting">waiting</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Firewall &mdash; firewalld</div>
+          <div class="row"><span class="rkey">zone</span><span class="rval">public (default)</span></div>
+          <div class="tags">
+            <span class="tag">ssh</span>
+            <span class="tag">http</span>
+            <span class="tag">https</span>
+            <span class="tag">dhcpv6-client</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Users</div>
+          <div class="row"><span class="rkey">devops</span>  <span class="rval">sudo &middot; docker group</span></div>
+          <div class="row"><span class="rkey">appuser</span> <span class="rval">docker group &middot; owns /app</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">System</div>
+          <div class="row"><span class="rkey">package manager</span><span class="rval">dnf (RPM-family)</span></div>
+          <div class="row"><span class="rkey">provisioner path</span><span class="rval">/opt/provisioner</span></div>
+          <div class="row"><span class="rkey">health endpoint</span><span class="rval">http://localhost:8081/health</span></div>
+        </div>
+
+        <a class="open-btn fedora" href="http://localhost:8081" target="_blank">Open Fedora VM &rarr;</a>
+
+      </div>
+    </div>
+
+  </div><!-- /distro-grid -->
+
+  <!-- Architecture -->
+  <div class="arch">
+    <h2>Architecture</h2>
+    <div class="arch-grid">
+
+      <div class="arch-node" style="border-color:rgba(233,84,32,.35)">
+        <h3 style="color:var(--ubuntu)">ubuntu-node &middot; 192.168.56.10</h3>
+        <ul>
+          <li>nginx :80 &rarr; host :8080</li>
+          <li>ufw firewall</li>
+          <li>Docker Engine</li>
+          <li>nginx-monitor.service</li>
+          <li>log-alert.timer</li>
+          <li>devops (sudo) + appuser</li>
+        </ul>
+      </div>
+
+      <div class="arch-center">
+        <div class="laptop-box">
+          <div class="lbl">Your Laptop</div>
+          <div class="sub">VirtualBox + Vagrant</div>
+          <div class="cmd">make up</div>
+        </div>
+        <div class="arrows" style="margin-top:10px">
+          :8080 &harr; ubuntu<br>
+          :8081 &harr; fedora
+        </div>
+      </div>
+
+      <div class="arch-node" style="border-color:rgba(60,110,180,.35)">
+        <h3 style="color:var(--fedora)">fedora-node &middot; 192.168.56.11</h3>
+        <ul>
+          <li>nginx :80 &rarr; host :8081</li>
+          <li>firewalld</li>
+          <li>Docker Engine</li>
+          <li>nginx-monitor.service</li>
+          <li>log-alert.timer</li>
+          <li>devops (sudo) + appuser</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer" id="last-check">Checking status&hellip;</div>
+
+</main>
+
+<script>
+  // When the dashboard is served from ubuntu-node (port 8080), use a relative URL
+  // so the health fetch is same-origin and never blocked by browser security policy.
+  const UBUNTU_HEALTH = window.location.port === '8080'
+    ? '/health'
+    : 'http://localhost:8080/health';
+  const FEDORA_HEALTH = 'http://localhost:8081/health';
+
+  async function checkVM(url, dotId, statusId) {
+    const dot    = document.getElementById(dotId);
+    const status = document.getElementById(statusId);
+    dot.className = 'dot pending';
+
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      const res = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
+      clearTimeout(timer);
+
+      if (res.ok) {
+        dot.className = 'dot online';
+        status.textContent = 'online';
+        status.style.color = 'var(--green)';
+      } else {
+        dot.className = 'dot offline';
+        status.textContent = 'HTTP ' + res.status;
+        status.style.color = 'var(--red)';
+      }
+    } catch (e) {
+      dot.className = 'dot offline';
+      status.textContent = e.name === 'AbortError' ? 'timeout' : 'offline';
+      status.style.color = 'var(--red)';
+    }
+  }
+
+  async function refreshAll() {
+    await Promise.all([
+      checkVM(UBUNTU_HEALTH, 'u-dot', 'u-status'),
+      checkVM(FEDORA_HEALTH,  'f-dot', 'f-status'),
+    ]);
+    document.getElementById('last-check').textContent =
+      'Last checked: ' + new Date().toLocaleTimeString();
+  }
+
+  refreshAll();
+  setInterval(refreshAll, 30000);
+</script>
+</body>
+</html>

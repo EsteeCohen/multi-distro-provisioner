@@ -12,7 +12,7 @@
 #   IMPORTANT: the indentation MUST be a real TAB character, not spaces.
 
 .PHONY: up down ssh-ubuntu ssh-fedora provision-ubuntu provision-fedora \
-        provision-all status clean help
+        provision-all status clean dashboard help
 
 # Default target — runs when you type "make" with no arguments
 help:
@@ -30,6 +30,7 @@ help:
 	@echo "  make ssh-ubuntu       SSH into ubuntu-node"
 	@echo "  make ssh-fedora       SSH into fedora-node"
 	@echo ""
+	@echo "  make dashboard        Open the comparison dashboard in a browser"
 	@echo "  make clean            Destroy VMs and remove .vagrant directory"
 	@echo ""
 
@@ -55,6 +56,12 @@ provision-fedora:
 	vagrant provision fedora-node
 
 provision-all: provision-ubuntu provision-fedora
+
+dashboard:
+	@echo "Dashboard: http://localhost:8080/dashboard.html"
+	@echo "(Both VMs must be provisioned and running)"
+	@start http://localhost:8080/dashboard.html 2>/dev/null || \
+	 open  http://localhost:8080/dashboard.html 2>/dev/null || true
 
 clean:
 	vagrant destroy -f

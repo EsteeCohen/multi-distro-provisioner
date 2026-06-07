@@ -2,6 +2,8 @@
 
 > Automated Linux infrastructure lab — provisions secure, configured environments on both **Ubuntu 22.04** and **Fedora 39** from a single codebase.
 
+![Dashboard demo](screenshots/demo.gif)
+
 ---
 
 ## The Story Behind This Project
@@ -55,6 +57,14 @@ Your Laptop
 
 ---
 
+## Screenshots
+
+| Dashboard | ubuntu-node | fedora-node |
+|-----------|-------------|-------------|
+| [![dashboard](screenshots/dashboard.png)](screenshots/dashboard.png) | [![ubuntu](screenshots/ubuntu-node.png)](screenshots/ubuntu-node.png) | [![fedora](screenshots/fedora-node.png)](screenshots/fedora-node.png) |
+
+---
+
 ## Requirements
 
 - [Vagrant](https://developer.hashicorp.com/vagrant/downloads) >= 2.3
@@ -86,6 +96,30 @@ curl http://localhost:8081   # Fedora
 # Destroy everything
 make down
 ```
+
+---
+
+## Dashboard
+
+After provisioning, each VM serves a status page and a shared side-by-side comparison dashboard.
+
+| URL | What you see |
+|-----|-------------|
+| `http://localhost:8080` | Ubuntu VM — distro info, services, firewall, users, live health |
+| `http://localhost:8081` | Fedora VM — same layout, different tooling |
+| `http://localhost:8080/dashboard.html` | Both VMs side by side, live health polling every 30 s |
+
+**Open the dashboard:**
+
+```bash
+# Print the URL and open it in your default browser
+make dashboard
+
+# Or navigate manually:
+# http://localhost:8080/dashboard.html
+```
+
+The dashboard polls `/health` on both VMs every 30 seconds. The status dot turns green when nginx is responding and red when it is down. Both VMs must be running for the Fedora panel to show as online.
 
 ---
 
@@ -122,7 +156,11 @@ sudo bash /opt/provisioner/scripts/common/monitor_logs.sh
 ├── CHECKLIST.md                   # phase-by-phase progress tracker
 │
 ├── docs/
-│   └── architecture.md            # diagrams, tables, design decisions
+│   ├── architecture.md            # diagrams, tables, design decisions
+│   └── project-guide.tex          # LaTeX source for the technical reference PDF
+│
+├── web/
+│   └── dashboard.html             # browser dashboard — both VMs side by side
 │
 ├── config/
 │   ├── users.conf                 # user definitions (name:group:shell:sudo)
@@ -133,6 +171,7 @@ sudo bash /opt/provisioner/scripts/common/monitor_logs.sh
 │   │   ├── utils.sh               # logging, detect_distro, check_root
 │   │   ├── create_users.sh        # reads users.conf, creates users
 │   │   ├── install_nginx.sh       # installs and configures nginx
+│   │   ├── generate_status_page.sh# generates the per-VM index.html at provision time
 │   │   ├── setup_docker.sh        # installs Docker Engine
 │   │   ├── setup_systemd.sh       # installs and enables service units
 │   │   ├── nginx_monitor_loop.sh  # runs inside nginx-monitor.service

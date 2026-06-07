@@ -116,25 +116,18 @@ NGINXEOF
     log_info "  Replaced Fedora nginx.conf (removed conflicting default server block)"
 fi
 
-# - 3. Create a simple index page -
-# WHY create an index.html?
-#   Without it, nginx serves a blank page or the default distro page.
-#   This page shows which machine you're on -- useful when testing both VMs.
-#
-# hostname -f = fully qualified domain name of the machine (ubuntu-node or fedora-node)
+# - 3. Generate the status page and copy the dashboard -
+# WHY a separate script?
+#   The status page embeds live system data (distro, disk, IP, provision time).
+#   Generating it in a dedicated script keeps install_nginx.sh readable.
+#   dashboard.html is a side-by-side comparison page served at /dashboard.html.
+DASHBOARD_SRC="${SCRIPT_DIR}/../../web/dashboard.html"
 mkdir -p "${WEB_ROOT}"
-cat > "${WEB_ROOT}/index.html" <<EOF
-<!DOCTYPE html>
-<html>
-<head><title>$(hostname -f)</title></head>
-<body>
-  <h1>$(hostname -f)</h1>
-  <p>Distro: ${distro}</p>
-  <p>Provisioned by multi-distro-provisioner</p>
-</body>
-</html>
-EOF
-log_info "  index.html created at ${WEB_ROOT}"
+bash "${SCRIPT_DIR}/generate_status_page.sh"
+if [[ -f "${DASHBOARD_SRC}" ]]; then
+    cp "${DASHBOARD_SRC}" "${WEB_ROOT}/dashboard.html"
+    log_info "  dashboard.html copied to ${WEB_ROOT}"
+fi
 
 # - 4. Validate nginx configuration -
 # WHY nginx -t before starting?
@@ -168,8 +161,12 @@ else
     log_info "  nginx already enabled"
 fi
 
-log_info "Starting nginx"
-systemctl start nginx
+log_info "Starting / reloading nginx"
+# WHY restart instead of start?
+#   'start' is a no-op when nginx is already running, so a re-provision would
+#   leave the old config loaded in memory even though we just wrote a new one.
+#   'restart' ensures the running process always picks up the updated config.
+systemctl restart nginx
 
 # - 6. Verify nginx is running -
 # systemctl is-active returns exit code 0 if running, non-zero if not.

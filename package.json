@@ -1,0 +1,29 @@
+{
+  "name": "multi-distro-provisioner",
+  "version": "1.0.0",
+  "description": "> Automated Linux infrastructure lab — provisions secure, configured environments on both **Ubuntu 22.04** and **Fedora 39** from a single codebase.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EsteeCohen/multi-distro-provisioner.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/EsteeCohen/multi-distro-provisioner/issues"
+  },
+  "homepage": "https://github.com/EsteeCohen/multi-distro-provisioner#readme",
+  "dependencies": {
+    "gif-encoder-2": "^1.0.5",
+    "playwright": "^1.60.0",
+    "sharp": "^0.34.5"
+  }
+}

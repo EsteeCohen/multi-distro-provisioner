@@ -6,3 +6,8 @@
 *.service  text eol=lf
 *.timer    text eol=lf
 *.tex      text eol=lf
+*.html     text eol=lf
+*.js       text eol=lf
+*.json     text eol=lf
+*.png      binary
+*.gif      binary
