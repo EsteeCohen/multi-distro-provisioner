@@ -20,10 +20,10 @@ Vagrant.configure("2") do |config|
     ubuntu.vm.box      = "ubuntu/jammy64"   # Ubuntu 22.04 LTS
     ubuntu.vm.hostname = "ubuntu-node"
 
-    # Static private IP ג€” always reachable at this address from your laptop
+    # Static private IP -- always reachable at this address from your laptop
     ubuntu.vm.network "private_network", ip: "192.168.56.10"
 
-    # Port forward: curl localhost:8080 on your laptop ג†’ hits nginx inside the VM
+    # Port forward: curl localhost:8080 on your laptop -> hits nginx inside the VM
     ubuntu.vm.network "forwarded_port", guest: 80, host: 8080
 
     ubuntu.vm.provider "virtualbox" do |vb|
@@ -56,4 +56,3 @@ Vagrant.configure("2") do |config|
   end
 
 end
-
