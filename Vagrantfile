@@ -15,7 +15,7 @@
 
 Vagrant.configure("2") do |config|
 
-  # ג”€ג”€ Ubuntu Node ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  
   config.vm.define "ubuntu-node" do |ubuntu|
     ubuntu.vm.box      = "ubuntu/jammy64"   # Ubuntu 22.04 LTS
     ubuntu.vm.hostname = "ubuntu-node"
@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
     ubuntu.vm.provision "shell", inline: "bash /vagrant/scripts/ubuntu/provision.sh"
   end
 
-  # ג”€ג”€ Fedora Node ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€ג”€
+  
   config.vm.define "fedora-node" do |fedora|
     fedora.vm.box      = "bento/fedora-39"   # Fedora 39
     fedora.vm.hostname = "fedora-node"
