@@ -1,4 +1,4 @@
-# Vagrantfile ג€” defines two Linux VMs for this lab.
+# Vagrantfile defines two Linux VMs for this lab.
 #
 # WHY Vagrant?
 #   Vagrant lets you describe a VM in a plain text file and spin it up with
