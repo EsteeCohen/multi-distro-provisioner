@@ -17,6 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Reject non-ASCII characters in bash scripts
+        run: |
+          if grep -RIn --include='*.sh' '[^ -~[:space:]]' ./scripts; then
+            echo "Found non-ASCII characters in bash scripts. Replace smart/unicode quotes with plain ASCII."
+            exit 1
+          fi
+
       - name: Run shellcheck on all scripts
         uses: ludeeus/action-shellcheck@master
         with:
