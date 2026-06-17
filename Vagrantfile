@@ -11,7 +11,7 @@
 #   3. It runs the matching provision.sh script inside the VM automatically
 #
 # Network: both VMs get a private IP on a host-only network (192.168.56.x).
-#   Your laptop can reach them at that IP, but they are isolated from the internet.
+# My laptop can reach them at that IP, but they are isolated from the internet.
 
 Vagrant.configure("2") do |config|
 
